@@ -15,9 +15,42 @@ class Car {
     this.controls = new Controls();
   }
 
-  update() {
+  update(roadBoarders) {
     this.#drive();
-    this.sensor.update();
+    this.polygon = this.#createPolygon();
+    this.sensor.update(roadBoarders);
+  }
+
+  #createPolygon() {
+    const points = [];
+    const rad = Math.hypot(this.width, this.height) / 2;
+    const alpha = Math.atan2(this.width, this.height);
+
+    // Top right point of the car
+    points.push({
+      x: this.x - Math.sin(this.angle - alpha) * rad,
+      y: this.y - Math.cos(this.angle - alpha) * rad,
+    });
+
+    // Top left point of the car
+    points.push({
+      x: this.x - Math.sin(this.angle + alpha) * rad,
+      y: this.y - Math.cos(this.angle + alpha) * rad,
+    });
+
+    // Bottom right point of the car
+    points.push({
+      x: this.x - Math.sin(Math.PI + this.angle - alpha) * rad,
+      y: this.y - Math.cos(Math.PI + this.angle - alpha) * rad,
+    });
+
+    //Bottom left point of the car
+    points.push({
+      x: this.x - Math.sin(Math.PI + this.angle + alpha) * rad,
+      y: this.y - Math.cos(Math.PI + this.angle + alpha) * rad,
+    });
+
+    return points;
   }
 
   #drive() {
@@ -46,16 +79,13 @@ class Car {
   }
 
   draw(ctx) {
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(-this.angle);
-
     ctx.beginPath();
-    ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
-    ctx.fill();
+    ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
+    for (let i = 1; i < this.polygon.length; i++) {
+      ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
+    }
 
-    // This is to avoid an infinite series of translations and rotations
-    ctx.restore();
+    ctx.fill();
 
     this.sensor.draw(ctx);
   }
